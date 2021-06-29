@@ -40,11 +40,11 @@ class ContinuousKalmanFilter:
 
     def calculate_p(self, Mt, H):
         tmp1 = 2 * np.matmul(Ft, self.P_est)  # Ft * Pt + Pt * Ft
-        tmp2 = np.matmul(self.P_est, np.transpose(H)) / Mt #- Pt*Htt*Mt^-1
-        tmp3 = -np.matmul(np.matmul(tmp2,H), self.P_est) + W # - Pt*Htt*Mt^-1*Ht*Pt + W
+        tmp2 = np.matmul(self.P_est, np.transpose(H)) / Mt # Pt * Htt * Mt^-1
+        tmp3 = -np.matmul(np.matmul(tmp2,H), self.P_est) + W_tilde # - Pt * Htt * Mt^-1 * Ht * Pt + W_tilde
 
-        delta_cov = tmp1 + tmp3
-        return self.P_est + dt*delta_cov
+        delta_cov = tmp1 + tmp3 #Ft * Pt + Pt * Ft - Pt * Htt * Mt^-1 * Ht * Pt + W_tilde
+        return self.P_est + dt*delta_cov # Ricatti equation for Pt
 
 
     def plotCovariances(self, P_vec, ax):
@@ -141,8 +141,13 @@ def estimate(filter, show=True):
 
     return gains
 
+def calculate_s():
+    for i, t in enumerate(t_vec):
+        pass
 
 def main():
+    St_list = calculate_s() #backpropagation
+
     kalman_filter = ContinuousKalmanFilter()
 
     estimate(kalman_filter, show=True)

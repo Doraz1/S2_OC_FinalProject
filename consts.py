@@ -13,12 +13,14 @@ y0 = 0
 
 P22 = 16 # variance of initial launch velocity gaussian
 P33 = 400 # variance of initial launch velocity gaussian
+W_tilde = np.diag([0, P22, P33]) # Kalman process noise covariance matrix
 
 # 1 dimensional noise
 v0 = np.random.normal(0, P22)
 
 W = 100 # Qk, target acceleration noise
 aT0 = np.random.normal(0, W)
+
 
 x0 = np.transpose(np.array([[y0, v0, aT0]]))
 
@@ -29,6 +31,6 @@ P0 = np.diag([var_y, var_v, var_aT])# apriori info covariance
 
 dt = 1
 tf = 10
-
+t_vec = np.linspace(0, tf, int(tf/dt)+1)
 measurements = np.array([1, 2, 3, 4, 5, 6])
 
