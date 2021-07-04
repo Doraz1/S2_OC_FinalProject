@@ -20,6 +20,7 @@ class RiccatiSolver:
         self.m_D1 = self.calc_m_D1()
         self.m_Ss = sp.linalg.solve_continuous_are(m_F, v_B, m_Q, m_R)
         self.m_Fc = self.calc_m_Fc()
+        self.l_m_S = self.solve_matrix_Riccati_diff_eq()
 
     def solve_matrix_Riccati_diff_eq(self):
         m_F1 = np.kron(self.m_Fc, np.eye(self.m_Fc.shape[0])) + np.kron(np.eye(self.m_Fc.shape[0]), self.m_Fc)
@@ -56,5 +57,4 @@ if __name__ == '__main__':
     m_R = 1
     t = np.linspace(0, 10, 101)
     a = RiccatiSolver(m_Sf, m_F, v_B, m_Q, m_R, t)
-    l_m_S = a.solve_matrix_Riccati_diff_eq()
-    print(l_m_S)
+    print(a.l_m_S)
