@@ -1,7 +1,7 @@
 import numpy as np
 
 TAU = 2
-Ft = np.array([[0, 1, 0], [0, 0, -1], [0, 0, 1/TAU]])
+F = np.array([[0, 1, 0], [0, 0, -1], [0, 0, 1/TAU]])
 B = np.array([[0, 1, 0]])
 b = 1.52 * 10 ** -2  # no u_k
 
@@ -32,5 +32,5 @@ P0 = np.diag([var_y, var_v, var_aT])# apriori info covariance
 dt = 1
 tf = 10
 t_vec = np.linspace(0, tf, int(tf/dt)+1)
-measurements = np.array([1, 2, 3, 4, 5, 6])
+measurements = np.linspace(1, tf, len(t_vec)-1)
 
