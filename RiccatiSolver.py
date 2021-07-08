@@ -18,7 +18,7 @@ class RiccatiSolver:
         self.t = t
 
         self.m_D1 = self.calc_m_D1()
-        self.m_Ss = sp.linalg.solve_continuous_are(m_F, v_B, m_Q, m_R)
+        self.m_Ss = sp.linalg.solve_continuous_are(self.m_F, self.v_B, self.m_Q, self.m_R)
         self.m_Fc = self.calc_m_Fc()
         self.l_m_S = self.solve_matrix_Riccati_diff_eq()
 
@@ -35,7 +35,7 @@ class RiccatiSolver:
 
     def calc_m_D1(self):
         if np.isscalar(self.m_R):
-            return np.dot(self.v_B, self.v_B.T) / m_R
+            return np.dot(self.v_B, self.v_B.T) / self.m_R
         return np.dot(np.dot(self.v_B.T, np.linalg.inv(self.m_R), self.v_B))
 
     def calc_m_Fc(self):

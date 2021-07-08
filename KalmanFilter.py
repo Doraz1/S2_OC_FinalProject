@@ -1,3 +1,5 @@
+import numpy as np
+
 from consts import *
 from matplotlib import pyplot as plt
 from matplotlib.patches import Ellipse
@@ -14,6 +16,7 @@ class ContinuousKalmanFilter:
         self.St_list = St_list
         self.xtt = 0
         self.t = 0
+
 
     def Iterate_once(self, measurement, command):
         '''
@@ -33,14 +36,15 @@ class ContinuousKalmanFilter:
         # measurement update
         K = np.matmul(self.P_est, H.T) / Mt # K = Pt * Ht * Mt^-1
 
-        self.x_est = (np.matmul(F, self.x_est) + command * B.T)*dt + np.matmul(K, measurement - self.xtt)
+        self.x_est = (np.matmul(F, self.x_est) + command * B)*dt + np.matmul(K, measurement - self.xtt)
         self.t = self.t + dt
 
         return K, self.x_est, self.P_est
 
     def calculate_p(self, Mt, H):
-        tmp1 = 2 * np.matmul(F, self.P_est)  # Ft * Pt + Pt * Ft
-        tmp2 = np.matmul(self.P_est, np.transpose(H)) / Mt # Pt * Htt * Mt^-1
+        # tmp1 = 2 * np.matmul(F, self.P_est)  # Ft * Pt + Pt * Ft
+        tmp1 = np.matmul(F, self.P_est)+np.matmul( self.P_est,F)
+        tmp2 =  np.matmul(self.P_est, np.transpose(H)) /Mt # Pt * Htt * Mt^-1
         tmp3 = -np.matmul(np.matmul(tmp2,H), self.P_est) + W_tilde # - Pt * Htt * Mt^-1 * Ht * Pt + W_tilde
 
         delta_cov = tmp1 + tmp3 #Ft * Pt + Pt * Ft - Pt * Htt * Mt^-1 * Ht * Pt + W_tilde
@@ -114,7 +118,7 @@ class ContinuousKalmanFilter:
             gains.append(K)
             states.append(x_est)
             covs.append(P)
-            control_cmd = -2/b * np.matmul(B, np.matmul(self.St_list[i], x_est)) # optimal controller = -2/b * Bt * S * x_est
+            control_cmd = -2/b * np.matmul(B.T, np.matmul(self.St_list[i], x_est)) # optimal controller = -2/b * Bt * S * x_est
 
         t = np.arange(len(measurements) + 1)
 
