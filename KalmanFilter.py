@@ -2,14 +2,17 @@ from consts import *
 from matplotlib import pyplot as plt
 from matplotlib.patches import Ellipse
 
+
 class ContinuousKalmanFilter:
     '''
     Kalman filter class.
     Given the system dynamics matrices Ft, B; the measurement matrix H; and the noise matrices W, Mt
     '''
-    def __init__(self, x0, P0):
+    def __init__(self, x0, P0, St_list):
         self.x_est = x0
         self.P_est = P0
+        self.St_list = St_list
+        self.xtt = 0
         self.t = 0
 
     def Iterate_once(self, measurement, command):
@@ -23,14 +26,14 @@ class ContinuousKalmanFilter:
         H = np.array([[1/(V*(tf - self.t)), 0, 0]])# measurement matrix
 
         # time update
-        xtt = np.matmul(F, self.x_est) # apriori x
-        self.P_est = self.calculate_p(Mt, H) # Pt = Ft*P + Pt*Ft - Pt*Htt*Mt^-1*Ht*Pt + W
+        self.xtt = self.xtt + np.matmul(H, self.x_est)*dt
+        # np.matmul(H, self.x_est) * dt
+        self.P_est = self.calculate_p(Mt, H) # Pt = Ft*P + Pt*Ft - Pt*Htt*Mt^-1*Ht*Pt + W_tilde
 
         # measurement update
-        K = np.matmul(self.P_est, np.transpose(H)) / Mt # K = Pt * Ht * Mt^-1
+        K = np.matmul(self.P_est, H.T) / Mt # K = Pt * Ht * Mt^-1
 
-        # x_hat = (F*x_hat + Bt*command)dt + K*(dz - Ht*xtt*dt)
-        self.x_est = (np.matmul(F, xtt) + command*np.transpose(B))*dt + np.matmul(K, measurement - np.matmul(H, xtt)*dt)
+        self.x_est = (np.matmul(F, self.x_est) + command * B.T)*dt + np.matmul(K, measurement - self.xtt)
         self.t = self.t + dt
 
         return K, self.x_est, self.P_est
@@ -43,30 +46,6 @@ class ContinuousKalmanFilter:
         delta_cov = tmp1 + tmp3 #Ft * Pt + Pt * Ft - Pt * Htt * Mt^-1 * Ht * Pt + W_tilde
         return self.P_est + dt*delta_cov # Ricatti equation for Pt
 
-
-    def plotCovariances(self, P_vec, ax):
-        ells = []
-        stretchFactor = 4
-        max_a=max(P_vec, key=lambda x: x[0][0])[0][0] # covariance with maximal a member
-        max_c=max(P_vec, key=lambda x: x[1][1])[1][1] # covariance with maximal c member
-
-        for i, cov in enumerate(P_vec):
-            ellipse = self.covarianceToEllipse(cov, stretchFactor*i, max_c)
-            ells.append(ellipse)
-
-            ax.add_artist(ellipse)
-            ellipse.set_clip_box(ax.bbox)
-            ellipse.set_alpha(1)
-            ellipse.set_facecolor((0.6, 0.6, 0.4))
-
-        ax.set_title('Covariances as a function of time')
-        ax.set_xlabel(f"Spaced timesteps (stretched by a factor of {stretchFactor})")
-        ax.set_ylabel("Covariance")
-        ax.set_xlim((-np.ceil(max_a), stretchFactor*(len(P_vec)-1)+max_a))
-        ax.set_ylim((0, max_c))
-
-        plt.subplots_adjust(hspace=0.5)
-        plt.show()
 
     # works for a 2x2 covariance matrix
     def covarianceToEllipse(self, cov_matrix, stepNumber, max_c):
@@ -112,18 +91,30 @@ class ContinuousKalmanFilter:
             ax2.set_ylabel("x")
             ax2.legend(loc='best')
 
-            self.plotCovariances(covs, ax3)
+            p00 = [cov[0][0] for cov in covs]
+            p11 = [cov[1][1] for cov in covs]
+            p22 = [cov[2][2] for cov in covs]
+            ax3.plot(t, p00, label='estimated covariance p00')
+            ax3.plot(t, p11, label='estimated covariance p11')
+            ax3.plot(t, p22, label='estimated covariance p22')
+            ax3.set_title('Covariance estimations as functions of time')
+            ax3.set_xlabel("Timesteps")
+            ax3.set_ylabel("Covariance")
+            ax3.legend(loc='best')
+            plt.subplots_adjust(hspace=0.5)
+            plt.show()
 
         gains = []
         states = [self.x_est]  # x0 value
         covs = [self.P_est]  # P0 value
         control_cmd = 0
 
-        for meas in measurements:
-            K, x, P = self.Iterate_once(meas, control_cmd)
+        for i, meas in enumerate(measurements):
+            K, x_est, P = self.Iterate_once(meas, control_cmd)
             gains.append(K)
-            states.append(x)
+            states.append(x_est)
             covs.append(P)
+            control_cmd = -2/b * np.matmul(B, np.matmul(self.St_list[i], x_est)) # optimal controller = -2/b * Bt * S * x_est
 
         t = np.arange(len(measurements) + 1)
 

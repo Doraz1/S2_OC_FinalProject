@@ -4,14 +4,6 @@ from consts import *
 
 
 def main():
-    # region initialization of constants
-    # H_list = []
-    # M_list = []
-    # for t in t_vec:
-    #     H_list.append(np.array([[1/(V*(tf-t)), 0, 0]]))
-    #     M_list.append(R1 + R2 / ( (tf-t)**2) )
-    #endregion
-
     # region Backpropagation stage - find St values
     St_list = []
     for k in range(len(t_vec)):
@@ -27,7 +19,7 @@ def main():
     #endregion
 
     # region Forward propagation (online) stage - find state and covariance estimations
-    kalman_filter = ContinuousKalmanFilter(x0, P0)
+    kalman_filter = ContinuousKalmanFilter(x0, P0, St_list)
     K_list, x_est_list, P_est_list = kalman_filter.estimate(measurements, show=True)
     #endregion
 

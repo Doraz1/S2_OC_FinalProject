@@ -1,7 +1,7 @@
 import numpy as np
 
 TAU = 2
-F = np.array([[0, 1, 0], [0, 0, -1], [0, 0, 1/TAU]])
+F = np.array([[0, 1, 0], [0, 0, -1], [0, 0, -1/TAU]])
 B = np.array([[0, 1, 0]])
 b = 1.52 * 10 ** -2  # no u_k
 
@@ -13,12 +13,12 @@ y0 = 0
 
 P22 = 16 # variance of initial launch velocity gaussian
 P33 = 400 # variance of initial launch velocity gaussian
-W_tilde = np.diag([0, P22, P33]) # Kalman process noise covariance matrix
 
 # 1 dimensional noise
 v0 = np.random.normal(0, P22)
 
 W = 100 # Qk, target acceleration noise
+W_tilde = np.diag([0, 0, W]) # Kalman process noise covariance matrix
 aT0 = np.random.normal(0, W)
 
 
