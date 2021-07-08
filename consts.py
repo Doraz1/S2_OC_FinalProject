@@ -2,12 +2,12 @@ import numpy as np
 
 TAU = 2
 F = np.array([[0, 1, 0], [0, 0, -1], [0, 0, -1/TAU]])
-B = np.array([[0, 1, 0]])
-b = 1.52 * 10 ** -2  # no u_k
+B = np.array([[0, 1, 0]]).T
+b = 1.52e-2  # no u_k
 
 V = 3000 # average speed
-R1 = 15 * 10 ** -6
-R2 = 1.67 * 10 ** -3
+R1 = 15e-6
+R2 = 1.67e-3
 
 y0 = 0
 
