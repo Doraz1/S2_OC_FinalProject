@@ -4,28 +4,29 @@ from consts import *
 from RiccatiSolver import RiccatiSolver
 
 def main():
-    # region Backpropagation stage - find St values
-    St_list = []
-    SOLVER=RiccatiSolver(m_Sf=np.diag([0.5, 0, 0]),m_F=F,v_B = B,m_Q=W_tilde,m_R=b/2,t=t_vec)
-    St_list=SOLVER.l_m_S
-    # for k in range(len(t_vec)):
-    #     St_list.append(np.diag([0.5, 0, 0])) #TODO - update to use RicattiSolver
-    #endregion
+    def calculate_p(p_prev, Mt, H):
+        # tmp1 = 2 * np.matmul(F, self.P_est)  # Ft * Pt + Pt * Ft
+        tmp1 = F @ p_prev + p_prev @ F
+        tmp2 = p_prev @ H.T / Mt  # Pt * Htt * Mt^-1
+        tmp3 = -tmp2 @ H @ p_prev + W_tilde  # - Pt * Htt * Mt^-1 * Ht * Pt + W_tilde
 
-    #region Forward propagation (offline) stage - find state and covariance estimations
-    # Pt_list = []
-    # Pt_list,M_list,H_list=a.create_Pt_list(t=t_vec)
-    # Kt_list = []
-    # for k in range(len(t_vec)):
-    #     Pt_list=a.create_Pt_list(t_vec) #TODO - update to use RicattiSolver
-    #     Kt_list.append(np.matmul(Pt_list[k], np.matmul(H_list[k],M_list[k])))
-    #endregion
+        delta_cov = tmp1 + tmp3  # Ft * Pt + Pt * Ft - Pt * Htt * Mt^-1 * Ht * Pt + W_tilde
+        return p_prev + delta_cov*dt  # Ricatti equation for Pt
+    'Backpropagation stage - find St values'
+    SOLVER=RiccatiSolver(m_Sf=np.diag([0.5, 0, 0]), m_F=F, v_B = B, m_Q=W_tilde, m_R=b/2, t=t_vec[::-1])
+    St_list=SOLVER.l_m_S[::-1]
 
-    # region Forward propagation (online) stage - find state and covariance estimations
-    kalman_filter = ContinuousKalmanFilter(x0, P0, St_list)
-    # plt.plot(measurements)
-    K_list, x_est_list, P_est_list = kalman_filter.estimate(measurements, show=True)
-    #endregion
+    'Forward propagation (offline) stage - find state and covariance estimations'
+    Pt_list = [P0]
+    for t in t_vec[:-1]:
+        H = np.array([[1 / (V * (tf - t)), 0, 0]])  # measurement matrix
+        Mt = R1 + R2 / ((tf - t) ** 2)
+        Pt_list.append(calculate_p(Pt_list[-1], Mt, H))
+
+    'Forward propagation (online) stage - find state and covariance estimations'
+    kalman_filter = ContinuousKalmanFilter(x0, Pt_list, St_list)
+    kalman_filter.estimate(plot=True)
+
 
 
 if __name__ == '__main__':

@@ -10,67 +10,19 @@ class ContinuousKalmanFilter:
     Kalman filter class.
     Given the system dynamics matrices Ft, B; the measurement matrix H; and the noise matrices W, Mt
     '''
-    def __init__(self, x0, P0, St_list):
+    def __init__(self, x0, Pt_list, St_list):
         self.x_est = x0
-        self.P_est = P0
         self.St_list = St_list
+        self.Pt_list = Pt_list
         self.xtt = 0
         self.t = 0
 
-
-    def Iterate_once(self, measurement, command):
+    def estimate(self, plot=False):
         '''
-        Estimate the state and the covariance noise
-        calculate the Kalman gain using the new measurement
-        Update the state and covariance estimations
+        Run the full estimation + control algorithm for all time values
+        Return the relevant parameters (gain, covariance, state and measurements)
         '''
-        # Initialize constants
-        Mt = R1 + R2 / ((tf - self.t)**2)
-        H = np.array([[1/(V*(tf - self.t)), 0, 0]])# measurement matrix
-
-        # time update
-        self.xtt = self.xtt + np.matmul(H, self.x_est)*dt
-        # np.matmul(H, self.x_est) * dt
-        self.P_est = self.calculate_p(Mt, H) # Pt = Ft*P + Pt*Ft - Pt*Htt*Mt^-1*Ht*Pt + W_tilde
-
-        # measurement update
-        K = np.matmul(self.P_est, H.T) / Mt # K = Pt * Ht * Mt^-1
-
-        self.x_est = (np.matmul(F, self.x_est) + command * B)*dt + np.matmul(K, measurement - self.xtt)
-        self.t = self.t + dt
-
-        return K, self.x_est, self.P_est
-
-    def calculate_p(self, Mt, H):
-        # tmp1 = 2 * np.matmul(F, self.P_est)  # Ft * Pt + Pt * Ft
-        tmp1 = np.matmul(F, self.P_est)+np.matmul( self.P_est,F)
-        tmp2 =  np.matmul(self.P_est, np.transpose(H)) /Mt # Pt * Htt * Mt^-1
-        tmp3 = -np.matmul(np.matmul(tmp2,H), self.P_est) + W_tilde # - Pt * Htt * Mt^-1 * Ht * Pt + W_tilde
-
-        delta_cov = tmp1 + tmp3 #Ft * Pt + Pt * Ft - Pt * Htt * Mt^-1 * Ht * Pt + W_tilde
-        return self.P_est + dt*delta_cov # Ricatti equation for Pt
-
-
-    # works for a 2x2 covariance matrix
-    def covarianceToEllipse(self, cov_matrix, stepNumber, max_c):
-        a = cov_matrix[0][0]
-        b = cov_matrix[0][1]
-        c = cov_matrix[1][1]
-
-        tmp1 = (a + c) / 2
-        tmp2 = (a - c) / 2
-        radius_vert = tmp1 + np.sqrt(tmp2 ** 2 + b ** 2)
-        radius_horiz = tmp1 - np.sqrt(tmp2 ** 2 + b ** 2)
-        if b == 0:
-            theta = 0 if a >= c else np.pi / 2
-        else:
-            theta = np.arctan2(radius_vert - a, b)
-        cov_ellipse = Ellipse(xy=(stepNumber, int(max_c/2)), width=2 * np.sqrt(radius_vert), height=2 * np.sqrt(radius_horiz),
-                         angle=theta * 180 / np.pi)
-        return cov_ellipse
-
-    def estimate(self, measurements, show=True):
-        def plot_estimates(t, gains, covs):
+        def plot_estimates(t, states, gains, covs, measurements):
             fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(12, 12))
             fig.suptitle(f'Gains and covariances for 10 steps of the system kalman filter', fontsize=16)
 
@@ -110,25 +62,50 @@ class ContinuousKalmanFilter:
 
         gains = []
         states = [self.x_est]  # x0 value
-        covs = [self.P_est]  # P0 value
-        control_cmd = 0
+        measurements = []
 
-        for i, meas in enumerate(measurements):
-            K, x_est, P = self.Iterate_once(meas, control_cmd)
+        for i, t in enumerate(t_vec[:-1]):
+            H = np.array([[1 / (V * (tf - self.t)), 0, 0]])  # measurement matrix
+            Mt = R1 + R2 / ((tf - self.t) ** 2)
+
+            meas_noise = np.random.normal(0, Mt)
+            meas_noise = 0
+            meas = H @ states[-1] + meas_noise
+            measurements.append(meas[0][0])
+
+            control_cmd = -2/b * B.T @ self.St_list[i] @ states[-1] # optimal controller = -2/b * Bt * S * x_est
+            K, x_est = self.estimate_single_iteration(meas, control_cmd, i)
+
             gains.append(K)
             states.append(x_est)
-            covs.append(P)
-            control_cmd = -2/b * np.matmul(B.T, np.matmul(self.St_list[i], x_est)) # optimal controller = -2/b * Bt * S * x_est
 
-        t = np.arange(len(measurements) + 1)
+            self.t = self.t + dt
 
-        gain_vecs = []
-        for i in range(len(gains[0])):
-            gains_xi = np.ravel([el[i] for el in gains])
-            gain_vecs.append(gains_xi)
+        gain_y = np.ravel([el[0] for el in gains])
+        gain_v = np.ravel([el[1] for el in gains])
+        gain_aT = np.ravel([el[2] for el in gains])
+        gains = [gain_y, gain_v, gain_aT]
 
-        if show:
-            plot_estimates(t, gain_vecs, covs)
+        if plot == True:
+            plot_estimates(t_vec, states, gains, self.Pt_list, measurements)
 
-        return gains, states, covs
+    def estimate_single_iteration(self, measurement, command, iteration):
+        '''
+        Calculate the Kalman gain using the new measurement
+        Estimate the state and the covariance noise
+        '''
+        'Constants'
+        H = np.array([[1 / (V * (tf - self.t)), 0, 0]])  # measurement matrix
+        Mt = R1 + R2 / ((tf - self.t) ** 2)
 
+        'time update'
+        self.xtt = self.xtt + (H @ self.x_est)[0][0] * dt
+        self.P_est = self.Pt_list[iteration]
+
+        'measurement update'
+        K = self.P_est @ H.T / Mt # K = Pt * Ht * Mt^-1
+
+        'state estimation'
+        self.x_est = (np.matmul(F, self.x_est) + command * B)*dt + np.matmul(K, measurement - self.xtt)
+
+        return K, self.x_est
