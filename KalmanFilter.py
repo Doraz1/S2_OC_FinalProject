@@ -87,8 +87,7 @@ class ContinuousKalmanFilter:
             plt.ylabel('$K_{}$'.format(i))
             plt.xlabel('time [s]')
             plt.grid(linestyle='dashed')
-
-        plt.subplots_adjust(hspace=0.5)
+        plt.suptitle("Kalman gains as a function of time")
         # plt.show()
 
     @staticmethod
@@ -98,7 +97,7 @@ class ContinuousKalmanFilter:
             plt.subplot(4, 1, i + 1)
             plt.plot(t, states[i, :], '-o')
             plt.plot(t, gt_states[i, :], '-o')
-            plt.legend(['estimate state', 'ground true'])
+            plt.legend(['Estimated state', 'ground truth'])
             plt.ylabel('$x_{}$'.format(i))
             plt.xlabel('time [s]')
             plt.grid(linestyle='dashed')
@@ -106,11 +105,12 @@ class ContinuousKalmanFilter:
         plt.subplot(4, 1, 4)
         plt.plot(t[1:], commands - states[2, :-1], '-o')
         plt.plot(t[1:], commands - gt_states[2, :-1], '-o')
-        plt.legend(['$a_P - a_{T estimate}$', '$a_P - a_{T}$'])
+        plt.legend(['$a_P - a_{T-estimate}$', '$a_P - a_{T}$'])
         plt.ylabel('$a_P - a_T$')
         plt.xlabel('time [s]')
         plt.grid(linestyle='dashed')
 
+        plt.suptitle("Ground truths and estimations as a function of time")
         plt.subplots_adjust(hspace=0.5)
         # plt.show()
 
@@ -129,5 +129,6 @@ class ContinuousKalmanFilter:
             plt.xlabel('time [s]')
             plt.grid(linestyle='dashed')
 
+        plt.suptitle("Covariances as a function of time")
         plt.subplots_adjust(hspace=0.5)
         # plt.show()
