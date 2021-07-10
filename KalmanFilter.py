@@ -29,6 +29,7 @@ class ContinuousKalmanFilter:
         states = self.x_est  # x0 value
         gt_states = self.x_gt  # x0 value
         measurements = []
+        commands = []
 
         for i, t in enumerate(t_vec[:-1]):
             H = np.array([[1 / (V * (tf - self.t)), 0, 0]])  # measurement matrix
@@ -39,6 +40,7 @@ class ContinuousKalmanFilter:
 
             gains = np.hstack((gains, K))
             measurements.append(measurement)
+            commands.append(control_cmd)
             states = np.hstack((states, x_est))
             gt_states = np.hstack((gt_states, x_gt))
 
@@ -47,8 +49,9 @@ class ContinuousKalmanFilter:
         gains = gains[:, 1:]
         if plot == True:
             ContinuousKalmanFilter.plot_gains(t_vec, gains)
-            ContinuousKalmanFilter.plot_states(t_vec, states, gt_states)
+            ContinuousKalmanFilter.plot_states(t_vec, states, gt_states, commands)
             ContinuousKalmanFilter.plot_P(t_vec, self.Pt_list)
+            plt.show()
 
     def estimate_single_iteration(self, command, iteration):
         '''
@@ -67,7 +70,7 @@ class ContinuousKalmanFilter:
         K = self.P_est @ H.T / Mt # K = Pt * Ht * Mt^-1
 
         'Ground true'
-        self.x_gt += (np.matmul(F, self.x_gt) + command * B) * dt + G * np.random.normal(0, np.sqrt(Mt))
+        self.x_gt += (np.matmul(F, self.x_gt) + command * B) * dt + G * np.random.normal(0, np.sqrt(W))*dt
         measurement = np.arcsin(self.x_gt[0] / (V * (tf - self.t))) + np.random.normal(0, np.sqrt(Mt))
 
         'state estimation'
@@ -77,6 +80,7 @@ class ContinuousKalmanFilter:
 
     @staticmethod
     def plot_gains(t, gains):
+        plt.figure(1)
         for i, row in enumerate(gains):
             plt.subplot(3, 1, i + 1)
             plt.plot(t[1:], gains[i, :], '-o')
@@ -85,12 +89,13 @@ class ContinuousKalmanFilter:
             plt.grid(linestyle='dashed')
 
         plt.subplots_adjust(hspace=0.5)
-        plt.show()
+        # plt.show()
 
     @staticmethod
-    def plot_states(t, states, gt_states):
+    def plot_states(t, states, gt_states, commands):
+        plt.figure(2)
         for i, row in enumerate(states):
-            plt.subplot(3, 1, i + 1)
+            plt.subplot(4, 1, i + 1)
             plt.plot(t, states[i, :], '-o')
             plt.plot(t, gt_states[i, :], '-o')
             plt.legend(['estimate state', 'ground true'])
@@ -98,8 +103,15 @@ class ContinuousKalmanFilter:
             plt.xlabel('time [s]')
             plt.grid(linestyle='dashed')
 
+        plt.subplot(4, 1, 4)
+        plt.plot(t[1:], commands, '-o')
+        plt.legend(['estimate state', 'ground true'])
+        plt.ylabel('$a_P$'.format(i))
+        plt.xlabel('time [s]')
+        plt.grid(linestyle='dashed')
+
         plt.subplots_adjust(hspace=0.5)
-        plt.show()
+        # plt.show()
 
     @staticmethod
     def plot_P(t, l_P):
@@ -108,6 +120,7 @@ class ContinuousKalmanFilter:
         p22 = [cov[2][2] for cov in l_P]
         tmp = [p00, p11, p22]
 
+        plt.figure(3)
         for i, row in enumerate(tmp):
             plt.subplot(3, 1, i + 1)
             plt.plot(t[1:], row, '-o')
@@ -116,4 +129,4 @@ class ContinuousKalmanFilter:
             plt.grid(linestyle='dashed')
 
         plt.subplots_adjust(hspace=0.5)
-        plt.show()
+        # plt.show()
