@@ -32,9 +32,6 @@ class ContinuousKalmanFilter:
         commands = []
 
         for i, t in enumerate(t_vec[:-1]):
-            H = np.array([[1 / (V * (tf - self.t)), 0, 0]])  # measurement matrix
-            Mt = R1 + R2 / ((tf - self.t) ** 2)
-
             control_cmd = -2/b * B.T @ self.St_list[i] @ states[:, -1] # optimal controller = -2/b * Bt * S * x_est
             K, x_est, x_gt, measurement = self.estimate_single_iteration(control_cmd, i)
 

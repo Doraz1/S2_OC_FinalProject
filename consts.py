@@ -29,7 +29,4 @@ y0 = 0
 v0 = np.random.normal(0, np.sqrt(P22))
 aT0 = np.random.normal(0, var_aT)
 
-# x0 = np.transpose(np.array([[y0, v0, aT0]]))
-x0 = np.transpose(np.array([[0, v0, 0]]))
-
-'Generate target path'
+x0 = np.transpose(np.array([[y0, v0, aT0]]))
