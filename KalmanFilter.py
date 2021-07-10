@@ -30,11 +30,14 @@ class ContinuousKalmanFilter:
         gt_states = self.x_gt  # x0 value
         measurements = []
         commands = []
-
+        J  = []
+        last_j=0
         for i, t in enumerate(t_vec[:-1]):
             control_cmd = -2/b * B.T @ self.St_list[i] @ states[:, -1] # optimal controller = -2/b * Bt * S * x_est
             K, x_est, x_gt, measurement = self.estimate_single_iteration(control_cmd, i)
-
+            j= x_est.T  @self.St_list[i]@ x_est + np.trace(K.T @ W_tilde @ K * self.St_list[i])*dt +np.trace(self.Pt_list[-1] @ Sf)
+            last_j=j[0][0]+last_j
+            J.append(last_j)
             gains = np.hstack((gains, K))
             measurements.append(measurement)
             commands = np.hstack((commands, control_cmd))
@@ -42,12 +45,13 @@ class ContinuousKalmanFilter:
             gt_states = np.hstack((gt_states, x_gt))
 
             self.t = self.t + dt
-
         gains = gains[:, 1:]
+        # print(last_j)
         if plot == True:
             ContinuousKalmanFilter.plot_gains(t_vec, gains)
             ContinuousKalmanFilter.plot_states(t_vec, states, gt_states, commands)
             ContinuousKalmanFilter.plot_P(t_vec, self.Pt_list)
+            ContinuousKalmanFilter.plot_J(t_vec,J)
             plt.show()
 
     def estimate_single_iteration(self, command, iteration):
@@ -112,6 +116,16 @@ class ContinuousKalmanFilter:
         # plt.show()
 
     @staticmethod
+    def plot_J(t,J):
+        plt.figure(4)
+        for i, row in enumerate(J):
+            plt.plot(t[1:], J, '-o')
+            plt.ylabel('J')
+            plt.xlabel('time [s]')
+            plt.grid(linestyle='dashed')
+        plt.suptitle("Minimization cost as a function of time")
+
+
     def plot_P(t, l_P):
         p00 = [cov[0][0] for cov in l_P]
         p11 = [cov[1][1] for cov in l_P]

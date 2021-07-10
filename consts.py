@@ -19,7 +19,7 @@ R2 = 1.67e-3
 W = 100 # Qk, target acceleration noise
 G = np.array([[0, 0, 1]]).T
 W_tilde = np.diag([0, 0, W]) # Kalman process noise covariance matrix
-
+Sf = np.diag([0.5, 0, 0])
 'State values and variances'
 var_v = P22 = 16 # variance of initial launch velocity
 var_aT = P33 = 400 # variance of initial target acceleration
