@@ -1,3 +1,4 @@
+import numpy as np
 from matplotlib import pyplot as plt
 from KalmanFilter import ContinuousKalmanFilter
 from consts import *
@@ -12,8 +13,8 @@ def main():
 
         delta_cov = tmp1 + tmp3  # Ft * Pt + Pt * Ft - Pt * Htt * Mt^-1 * Ht * Pt + W_tilde
         return p_prev + delta_cov*dt  # Ricatti equation for Pt
-    'Backpropagation stage - find St values'
-    SOLVER=RiccatiSolver(m_Sf=np.diag([0.5, 0, 0]), m_F=F, v_B = B, m_Q=W_tilde, m_R=b/2, t=t_vec[::-1])
+    'Backpropagation stage - find St values.  m_Q is set to zeros matrix according to the cost function'
+    SOLVER=RiccatiSolver(m_S0=np.diag([0.5, 0, 0]), m_F=F, v_B=B, m_Q=np.zeros(F.shape), m_R=b/2, t=t_vec[::-1])
     St_list=SOLVER.l_m_S[::-1]
 
     'Forward propagation (offline) stage - find state and covariance estimations'
