@@ -38,10 +38,10 @@ class RiccatiSolver:
 
     @staticmethod
     def dP_dt(v_P0, t, m_F, m_W, shape, tf):
-        v_H = np.array([[1 / (V * (tf - t)), 0, 0]]).T
+        v_H = np.array([[1 / (V * (tf - t)), 0, 0]])
         M = R1 + R2 / ((tf - t) ** 2)
         m_P = v_P0.reshape(shape)
-        dPdt = m_F.T @ m_P + m_P @ m_F - m_P @ v_H @ v_H.T @ m_P / M + m_W
+        dPdt = m_F @ m_P + m_P @ m_F.T - m_P @ v_H.T @ v_H @ m_P / M + m_W
         return dPdt.flatten()
 
 
