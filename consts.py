@@ -7,7 +7,7 @@ np.set_printoptions(precision=4)
 
 'Constants'
 TAU = 2
-dt = 1
+dt = 0.1
 tf = 10
 t_vec = np.linspace(0, tf, int(tf/dt)+1)
 F = np.array([[0, 1, 0], [0, 0, -1], [0, 0, -1/TAU]])

@@ -28,35 +28,39 @@ class ContinuousKalmanFilter:
 
             # subplot 1
             for i, gainVec in enumerate(gains):
-                ax1.plot(t[1:], gainVec, label=f'$x_{i + 1}$ gain')
+                ax1.plot(t[1:], gainVec, '-o', label=f'$x_{i + 1}$ gain')
                 ax1.set_title('Kalman gains as a function of time')
                 ax1.set_xlabel("Timesteps")
                 ax1.set_ylabel("Gain")
             ax1.legend(loc='best')
+            ax1.grid(linestyle='dashed')
 
             # subplot 2
             x1 = [el[0] for el in states]
             x2 = [el[1] for el in states]
 
             # plot
-            ax2.plot(t, x1, label='estimated state x1')
-            ax2.plot(t, x2, label='estimated state x2')
+            ax2.plot(t, x1, '-o', label='estimated state x1')
+            ax2.plot(t, x2, '-o', label='estimated state x2')
             ax2.plot(t[1:], measurements, label='measurements')
             ax2.set_title('Kalman state estimations vs measurements as a function of time')
             ax2.set_xlabel("Timesteps")
             ax2.set_ylabel("x")
             ax2.legend(loc='best')
+            ax2.grid(linestyle='dashed')
 
             p00 = [cov[0][0] for cov in covs]
             p11 = [cov[1][1] for cov in covs]
             p22 = [cov[2][2] for cov in covs]
-            ax3.plot(t, p00, label='estimated covariance p00')
-            ax3.plot(t, p11, label='estimated covariance p11')
-            ax3.plot(t, p22, label='estimated covariance p22')
+            ax3.plot(t[1:], p00, '-o', label='estimated covariance p00')
+            ax3.plot(t[1:], p11, '-o', label='estimated covariance p11')
+            ax3.plot(t[1:], p22, '-o', label='estimated covariance p22')
             ax3.set_title('Covariance estimations as functions of time')
             ax3.set_xlabel("Timesteps")
             ax3.set_ylabel("Covariance")
             ax3.legend(loc='best')
+            ax3.grid(linestyle='dashed')
+
             plt.subplots_adjust(hspace=0.5)
             plt.show()
 
