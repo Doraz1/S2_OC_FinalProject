@@ -40,7 +40,7 @@ class ContinuousKalmanFilter:
 
             gains = np.hstack((gains, K))
             measurements.append(measurement)
-            commands.append(control_cmd)
+            commands = np.hstack((commands, control_cmd))
             states = np.hstack((states, x_est))
             gt_states = np.hstack((gt_states, x_gt))
 
@@ -71,7 +71,7 @@ class ContinuousKalmanFilter:
 
         'Ground true'
         self.x_gt += (np.matmul(F, self.x_gt) + command * B) * dt + G * np.random.normal(0, np.sqrt(W))*dt
-        measurement = np.arcsin(self.x_gt[0] / (V * (tf - self.t))) + np.random.normal(0, np.sqrt(Mt))
+        measurement = H @ self.x_gt + np.random.normal(0, np.sqrt(Mt))
 
         'state estimation'
         self.x_est += (np.matmul(F, self.x_est) + command * B)*dt + np.matmul(K, measurement - H @ self.x_est)*dt
@@ -104,9 +104,10 @@ class ContinuousKalmanFilter:
             plt.grid(linestyle='dashed')
 
         plt.subplot(4, 1, 4)
-        plt.plot(t[1:], commands, '-o')
-        plt.legend(['estimate state', 'ground true'])
-        plt.ylabel('$a_P$'.format(i))
+        plt.plot(t[1:], commands - states[2, :-1], '-o')
+        plt.plot(t[1:], commands - gt_states[2, :-1], '-o')
+        plt.legend(['$a_P - a_{T estimate}$', '$a_P - a_{T}$'])
+        plt.ylabel('$a_P - a_T$')
         plt.xlabel('time [s]')
         plt.grid(linestyle='dashed')
 
