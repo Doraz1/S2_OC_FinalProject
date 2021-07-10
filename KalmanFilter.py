@@ -85,6 +85,8 @@ class ContinuousKalmanFilter:
             plt.xlabel('time [s]')
             plt.grid(linestyle='dashed')
         plt.suptitle("Kalman gains as a function of time")
+        plt.subplots_adjust(hspace=0.5)
+
         # plt.show()
 
     @staticmethod
