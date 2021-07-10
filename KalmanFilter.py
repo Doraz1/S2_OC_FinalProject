@@ -38,10 +38,12 @@ class ContinuousKalmanFilter:
             # subplot 2
             x1 = [el[0] for el in states]
             x2 = [el[1] for el in states]
+            x3 = [el[1] for el in states]
 
             # plot
-            ax2.plot(t, x1, '-o', label='estimated state x1')
-            ax2.plot(t, x2, '-o', label='estimated state x2')
+            ax2.plot(t, x1, '-o', label='estimated state $x_1$')
+            ax2.plot(t, x2, '-o', label='estimated state $x_2$')
+            ax2.plot(t, x3, '-o', label='estimated state $x_3$')
             ax2.plot(t[1:], measurements, label='measurements')
             ax2.set_title('Kalman state estimations vs measurements as a function of time')
             ax2.set_xlabel("Timesteps")
