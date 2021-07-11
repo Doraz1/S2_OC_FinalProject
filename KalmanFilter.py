@@ -38,8 +38,8 @@ class ContinuousKalmanFilter:
         gt_states = self.x_gt  # x0 value
         measurements = []
         commands = []
-        J  = []
-        last_j=0
+        J = []
+        last_j = 0
         for i, t in enumerate(t_vec[:-1]):
             control_cmd = -(1/b) * B.T @ self.St_list[i] @ states[:, -1]*gaincheck # optimal controller = -2/b * Bt * S * x_est
             K, x_est, x_gt, measurement = self.estimate_single_iteration(control_cmd, i)
@@ -54,7 +54,7 @@ class ContinuousKalmanFilter:
 
             self.t = self.t + dt
         gains = gains[:, 1:]
-        # print(last_j)
+
         if plot == True:
             ContinuousKalmanFilter.plot_gains(t_vec, gains)
             ContinuousKalmanFilter.plot_states(t_vec, states, gt_states, commands)
@@ -104,12 +104,13 @@ class ContinuousKalmanFilter:
     @staticmethod
     def plot_states(t, states, gt_states, commands):
         plt.figure(2)
+        name_dict = {0 : 'y', 1 : 'v', 2 : '$a_T$'}
         for i, row in enumerate(states):
             plt.subplot(5, 1, i + 1)
             plt.plot(t, states[i, :], '-o')
             plt.plot(t, gt_states[i, :], '-o')
             plt.legend(['Estimated state', 'ground truth'])
-            plt.ylabel('$x_{}$'.format(i))
+            plt.ylabel(name_dict[i])
             plt.xlabel('time [s]')
             plt.grid(linestyle='dashed')
 

@@ -30,37 +30,48 @@ def main(gaincheck):
     K_list= solve_Riccati_K(Pt_list)
     'Forward propagation (online) stage - find state and covariance estimations'
     kalman_filter = ContinuousKalmanFilter(x0, Pt_list, St_list,K_list)
-    # l=0
-    # j=np.zeros(3)
-    j=kalman_filter.estimate(plot=False,gaincheck=gaincheck)
+    j = kalman_filter.estimate(plot=True, gaincheck=gaincheck)
+
     return j
 if __name__ == '__main__':
-
+    N_runs = 1
     j=0
     j1=[]
     j2=[]
     j3=[]
     gaincheck = [1, 1.01, 0.99]
+    gaincheck = [1]
     index_t = 0
 
-    for i in range(50):
+    for i in range(N_runs):
         random.seed(i)
-        for gc  in gaincheck:
-            j=main(gaincheck=gc)
-            if index_t==0:
+        v0 = np.random.normal(0, np.sqrt(var_v))
+        aT0 = np.random.normal(0, np.sqrt(var_aT))
+        x0 = np.transpose(np.array([[y0, v0, aT0]]))
+        for gc in gaincheck:
+            j = main(gaincheck=gc)
+            if index_t == 0:
                 j1.append(j)
             if index_t == 1:
                 j2.append(j)
             if index_t == 2:
                 j3.append(j)
-            index_t=index_t+1
-        index_t=0
+            index_t = index_t+1
+
+        index_t = 0
 
 
     fig, ax = plt.subplots()
-    ax.plot(j1,'o',label='optimal')
-    ax.plot(j2,'o',label='optimal*1.01')
-    ax.plot(j3,'o',label='optimal*0.99')
+    run_number = range(len(j1))
+    ax.plot(run_number, j1,'o',label='optimal', color='green')
+    ax.plot(run_number, np.ones(len(run_number))*np.mean(j1),'-',color='green')
+    ax.plot(run_number, j2,'o',label='optimal*1.01', color='blue')
+    ax.plot(run_number, np.ones(len(run_number))*np.mean(j2),'-', color='blue')
+    ax.plot(run_number, j3,'o',label='optimal*0.99', color='red')
+    ax.plot(run_number, np.ones(len(run_number))*np.mean(j3),'-', color='red')
     legend = ax.legend(loc='upper center', shadow=False, fontsize='x-large')
     legend.get_frame().set_facecolor('C0')
+    plt.title('Total costs for different controllers')
+    plt.xlabel('Run number')
+    plt.ylabel('Total cost')
     plt.show()
