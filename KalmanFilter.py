@@ -41,7 +41,7 @@ class ContinuousKalmanFilter:
         J  = []
         last_j=0
         for i, t in enumerate(t_vec[:-1]):
-            control_cmd = -2/b * B.T @ self.St_list[i] @ states[:, -1]*gaincheck # optimal controller = -2/b * Bt * S * x_est
+            control_cmd = -(1/b) * B.T @ self.St_list[i] @ states[:, -1]*gaincheck # optimal controller = -2/b * Bt * S * x_est
             K, x_est, x_gt, measurement = self.estimate_single_iteration(control_cmd, i)
             j= x_est.T  @self.St_list[i]@ x_est + self.calculate_integral(self.t) +np.trace(self.Pt_list[-1] @ Sf)
             last_j=j[0][0]+last_j

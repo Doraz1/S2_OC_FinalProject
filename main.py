@@ -22,7 +22,7 @@ def solve_Riccati_K(m_P):
 
 def main(gaincheck):
     'Backpropagation stage - find St values.  m_Q is set to zeros matrix according to the cost function'
-    St_list = RiccatiSolver.solve_Riccati_S(m_S0=np.diag([0.5, 0, 0]), m_F=F, v_B=B, m_Q=np.zeros(F.shape), m_R=b/2, t=-t_vec)
+    St_list = RiccatiSolver.solve_Riccati_S(m_S0=np.diag([0.5, 0, 0]), m_F=F, v_B=B, m_Q=np.zeros(F.shape), m_R=b, t=-t_vec)
     St_list = St_list[::-1]
     'Forward propagation (offline) stage - find state and covariance estimations'
     Pt_list = RiccatiSolver.solve_Riccati_P(m_P0=P0, m_F=F, m_W=W_tilde, t=t_vec[:-1], tf=tf)
