@@ -12,19 +12,27 @@ class ContinuousKalmanFilter:
     Kalman filter class.
     Given the system dynamics matrices Ft, B; the measurement matrix H; and the noise matrices W, Mt
     '''
-    def __init__(self, x0, Pt_list, St_list):
+    def __init__(self, x0, Pt_list, St_list,K_list):
         self.x_gt = x0
         self.x_est = x0 * 0
         self.St_list = St_list
         self.Pt_list = Pt_list
+        self.K_list=K_list
         self.xtt = 0
         self.t = 0
-
-    def estimate(self, plot=False):
+    def calculate_integral(self,t):
+        index_t=int(t*10-1)
+        inte=0
+        while t<=tf:
+            inte=inte+np.trace(self.K_list[index_t].T @ W_tilde @ self.K_list[index_t] * self.St_list[index_t]) * dt
+            t=t+dt
+        return inte
+    def estimate(self, plot=False,gaincheck=1):
         '''
         Run the full estimation + control algorithm for all time values
         Return the relevant parameters (gain, covariance, state and measurements)
         '''
+
         gains = np.zeros((3, 1))
         states = self.x_est  # x0 value
         gt_states = self.x_gt  # x0 value
@@ -33,9 +41,9 @@ class ContinuousKalmanFilter:
         J  = []
         last_j=0
         for i, t in enumerate(t_vec[:-1]):
-            control_cmd = -2/b * B.T @ self.St_list[i] @ states[:, -1] # optimal controller = -2/b * Bt * S * x_est
+            control_cmd = -2/b * B.T @ self.St_list[i] @ states[:, -1]*gaincheck # optimal controller = -2/b * Bt * S * x_est
             K, x_est, x_gt, measurement = self.estimate_single_iteration(control_cmd, i)
-            j= x_est.T  @self.St_list[i]@ x_est + np.trace(K.T @ W_tilde @ K * self.St_list[i])*dt +np.trace(self.Pt_list[-1] @ Sf)
+            j= x_est.T  @self.St_list[i]@ x_est + self.calculate_integral(self.t) +np.trace(self.Pt_list[-1] @ Sf)
             last_j=j[0][0]+last_j
             J.append(last_j)
             gains = np.hstack((gains, K))
@@ -53,7 +61,7 @@ class ContinuousKalmanFilter:
             ContinuousKalmanFilter.plot_P(t_vec, self.Pt_list)
             ContinuousKalmanFilter.plot_J(t_vec,J)
             plt.show()
-
+        return last_j
     def estimate_single_iteration(self, command, iteration):
         '''
         Calculate the Kalman gain using the new measurement
