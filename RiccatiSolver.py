@@ -36,15 +36,6 @@ class RiccatiSolver:
             l_m_P.append(m_P)
         return l_m_P
 
-    @staticmethod
-    def solve_Riccati_K(m_P):
-        K=[]
-        for t in t_vec:
-            H = np.array([[1 / (V * (tf - t)), 0, 0]])  # measurement matrix
-            Mt = R1 + R2 / ((tf - t) ** 2)
-            k = m_P[t] @ H.T / Mt
-            K.append(m_P)
-        return K
 
     @staticmethod
     def dP_dt(v_P0, t, m_F, m_W, shape, tf):

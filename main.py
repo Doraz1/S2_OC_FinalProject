@@ -43,7 +43,7 @@ if __name__ == '__main__':
     gaincheck = [1, 1.01, 0.99]
     index_t = 0
 
-    for i in range(10):
+    for i in range(50):
         random.seed(i)
         for gc  in gaincheck:
             j=main(gaincheck=gc)
@@ -58,9 +58,9 @@ if __name__ == '__main__':
 
 
     fig, ax = plt.subplots()
-    ax.plot(j1,'o-.',label='optimal')
-    ax.plot(j2,'o-.',label='optimal*1.01')
-    ax.plot(j3,'o-.',label='optimal*0.99')
+    ax.plot(j1,'o',label='optimal')
+    ax.plot(j2,'o',label='optimal*1.01')
+    ax.plot(j3,'o',label='optimal*0.99')
     legend = ax.legend(loc='upper center', shadow=False, fontsize='x-large')
     legend.get_frame().set_facecolor('C0')
     plt.show()
