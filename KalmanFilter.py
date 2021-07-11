@@ -30,14 +30,14 @@ class ContinuousKalmanFilter:
         gt_states = self.x_gt  # x0 value
         measurements = []
         commands = []
-
+        J  = []
+        last_j=0
         for i, t in enumerate(t_vec[:-1]):
-            H = np.array([[1 / (V * (tf - self.t)), 0, 0]])  # measurement matrix
-            Mt = R1 + R2 / ((tf - self.t) ** 2)
-
             control_cmd = -2/b * B.T @ self.St_list[i] @ states[:, -1] # optimal controller = -2/b * Bt * S * x_est
             K, x_est, x_gt, measurement = self.estimate_single_iteration(control_cmd, i)
-
+            j= x_est.T  @self.St_list[i]@ x_est + np.trace(K.T @ W_tilde @ K * self.St_list[i])*dt +np.trace(self.Pt_list[-1] @ Sf)
+            last_j=j[0][0]+last_j
+            J.append(last_j)
             gains = np.hstack((gains, K))
             measurements.append(measurement)
             commands = np.hstack((commands, control_cmd))
@@ -45,12 +45,13 @@ class ContinuousKalmanFilter:
             gt_states = np.hstack((gt_states, x_gt))
 
             self.t = self.t + dt
-
         gains = gains[:, 1:]
+        # print(last_j)
         if plot == True:
             ContinuousKalmanFilter.plot_gains(t_vec, gains)
             ContinuousKalmanFilter.plot_states(t_vec, states, gt_states, commands)
             ContinuousKalmanFilter.plot_P(t_vec, self.Pt_list)
+            ContinuousKalmanFilter.plot_J(t_vec,J)
             plt.show()
 
     def estimate_single_iteration(self, command, iteration):
@@ -87,8 +88,9 @@ class ContinuousKalmanFilter:
             plt.ylabel('$K_{}$'.format(i))
             plt.xlabel('time [s]')
             plt.grid(linestyle='dashed')
-
+        plt.suptitle("Kalman gains as a function of time")
         plt.subplots_adjust(hspace=0.5)
+
         # plt.show()
 
     @staticmethod
@@ -98,7 +100,7 @@ class ContinuousKalmanFilter:
             plt.subplot(5, 1, i + 1)
             plt.plot(t, states[i, :], '-o')
             plt.plot(t, gt_states[i, :], '-o')
-            plt.legend(['estimate state', 'ground true'])
+            plt.legend(['Estimated state', 'ground truth'])
             plt.ylabel('$x_{}$'.format(i))
             plt.xlabel('time [s]')
             plt.grid(linestyle='dashed')
@@ -112,15 +114,26 @@ class ContinuousKalmanFilter:
         plt.subplot(5, 1, 5)
         plt.plot(t[1:], commands - states[2, :-1], '-o')
         plt.plot(t[1:], commands - gt_states[2, :-1], '-o')
-        plt.legend(['$a_P - a_{T estimate}$', '$a_P - a_{T}$'])
+        plt.legend(['$a_P - a_{T-estimate}$', '$a_P - a_{T}$'])
         plt.ylabel('$a_P - a_T$')
         plt.xlabel('time [s]')
         plt.grid(linestyle='dashed')
 
+        plt.suptitle("Ground truths and estimations as a function of time")
         plt.subplots_adjust(hspace=0.5)
         # plt.show()
 
     @staticmethod
+    def plot_J(t,J):
+        plt.figure(4)
+        for i, row in enumerate(J):
+            plt.plot(t[1:], J, '-o')
+            plt.ylabel('J')
+            plt.xlabel('time [s]')
+            plt.grid(linestyle='dashed')
+        plt.suptitle("Minimization cost as a function of time")
+
+
     def plot_P(t, l_P):
         p00 = [cov[0][0] for cov in l_P]
         p11 = [cov[1][1] for cov in l_P]
@@ -135,5 +148,6 @@ class ContinuousKalmanFilter:
             plt.xlabel('time [s]')
             plt.grid(linestyle='dashed')
 
+        plt.suptitle("Covariances as a function of time")
         plt.subplots_adjust(hspace=0.5)
         # plt.show()
