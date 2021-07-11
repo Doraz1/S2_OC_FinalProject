@@ -105,7 +105,7 @@ class ContinuousKalmanFilter:
     def plot_states(t, states, gt_states, commands):
         plt.figure(2)
         for i, row in enumerate(states):
-            plt.subplot(4, 1, i + 1)
+            plt.subplot(5, 1, i + 1)
             plt.plot(t, states[i, :], '-o')
             plt.plot(t, gt_states[i, :], '-o')
             plt.legend(['Estimated state', 'ground truth'])
@@ -113,7 +113,13 @@ class ContinuousKalmanFilter:
             plt.xlabel('time [s]')
             plt.grid(linestyle='dashed')
 
-        plt.subplot(4, 1, 4)
+        plt.subplot(5, 1, 4)
+        plt.plot(t[1:], commands, '-o')
+        plt.ylabel('$a_P$')
+        plt.xlabel('time [s]')
+        plt.grid(linestyle='dashed')
+
+        plt.subplot(5, 1, 5)
         plt.plot(t[1:], commands - states[2, :-1], '-o')
         plt.plot(t[1:], commands - gt_states[2, :-1], '-o')
         plt.legend(['$a_P - a_{T-estimate}$', '$a_P - a_{T}$'])
